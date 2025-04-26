@@ -12,4 +12,9 @@ Rails.application.routes.draw do
     post "sign_up", action: :sign_up
     post "log_in", action: :log_in
   end
+
+  namespace :task do
+    post "create", action: :create
+    get "list", action: :list
+  end
 end
