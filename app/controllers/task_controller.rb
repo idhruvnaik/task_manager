@@ -1,5 +1,6 @@
 class TaskController < ApplicationController
   before_action :validate_user
+  before_action :check_rate_limit, only: [:create]
 
   def create
     unless validate_params(["title", "description"])
