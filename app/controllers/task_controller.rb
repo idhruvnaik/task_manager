@@ -37,4 +37,25 @@ class TaskController < ApplicationController
       render_failure({}, error.message, :internal_server_error) and return
     end
   end
+
+  def archive
+    unless validate_params(["id"])
+      return
+    end
+
+    begin
+      task = Task.find_by_id params[:id]
+      if task.nil?
+        render_failure({}, "Task is missing !!") and return
+      end
+
+      ActiveRecord::Base.transaction do
+        task.update(status: :archived)
+      end
+
+      render_success(task, "Success !!", :ok) and return
+    rescue => error
+      render_failure({}, error.message, :internal_server_error) and return
+    end
+  end
 end

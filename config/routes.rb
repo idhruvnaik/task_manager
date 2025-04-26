@@ -16,5 +16,6 @@ Rails.application.routes.draw do
   namespace :task do
     post "create", action: :create
     get "list", action: :list
+    patch "archive", action: :archive
   end
 end
