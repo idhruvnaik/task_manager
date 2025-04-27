@@ -1,6 +1,7 @@
 class TaskController < ApplicationController
   before_action :validate_user
   before_action :check_rate_limit, only: [:create]
+  before_action :sanitize_parameters
 
   def create
     unless validate_params(["title", "description"])
@@ -8,12 +9,10 @@ class TaskController < ApplicationController
     end
 
     begin
-      task = nil
-      ActiveRecord::Base.transaction do
-        task = Task.create!(title: params[:title], description: params[:description], status: :pending, user_id: @user.id)
-      end
+      instance = TaskService::Manager.new(@user)
+      response = instance.create(params[:title], params[:description])
 
-      render_success(task, "Profile created", :created) and return
+      render_success(response, "Task created !!", :created) and return
     rescue => error
       render_failure({}, error.message, :internal_server_error) and return
     end
@@ -25,14 +24,10 @@ class TaskController < ApplicationController
     end
 
     begin
-      tasks = Task.where(user_id: @user.id)
-      tasks = tasks.where(status: params[:status]) if params[:status].present?
-      tasks = tasks.order(created_at: :desc)
-      tasks = tasks.paginate(page: params[:page], per_page: 1)
+      instance = TaskService::Manager.new(@user)
+      response = instance.list()
 
-      data = { tasks: tasks, meta: { current_page: tasks.current_page, per_page: tasks.per_page, total_entries: tasks.total_entries, total_pages: tasks.total_pages } }
-
-      render_success(data, "Success !!", :ok) and return
+      render_success(response, "Success !!", :ok) and return
     rescue => error
       render_failure({}, error.message, :internal_server_error) and return
     end
@@ -57,5 +52,11 @@ class TaskController < ApplicationController
     rescue => error
       render_failure({}, error.message, :internal_server_error) and return
     end
+  end
+
+  private
+
+  def sanitize_parameters
+    params.slice!(:title, :description, :status, :reminder_date, :completion_date)
   end
 end
