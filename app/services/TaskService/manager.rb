@@ -11,7 +11,9 @@ module TaskService
         tasks = tasks.order(created_at: :desc)
         tasks = tasks.paginate(page: page, per_page: per_page)
 
-        data = { tasks: tasks, meta: { current_page: tasks.current_page, per_page: tasks.per_page, total_entries: tasks.total_entries, total_pages: tasks.total_pages } }
+        serialized_tasks = tasks.map { |task| TaskSerializer.new(task) }
+
+        data = { tasks: serialized_tasks, meta: { current_page: tasks.current_page, per_page: tasks.per_page, total_entries: tasks.total_entries, total_pages: tasks.total_pages } }
       rescue => error
         Rails.logger.error("[TaskService::Manager] Error listing tasks: #{error.message}")
         Rails.logger.error(error.backtrace.join("\n"))
